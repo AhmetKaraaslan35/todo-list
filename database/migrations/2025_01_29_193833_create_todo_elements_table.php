@@ -13,7 +13,7 @@ return new class extends Migration
     {
         Schema::create('todo_elements', function (Blueprint $table) {
             $table->id();
-            $table->string('title');
+            $table->string('todo');
             $table->unsignedBigInteger('todo_list_id');
             $table->enum('done',['true','false']);
 

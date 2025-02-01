@@ -4,7 +4,10 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use Tymon\JWTAuth\Facades\JWTAuth;
-
+use App\Models\TodoList;
+use App\Models\TodoElement;
+use App\Rules\CheckListOwner;
+use Illuminate\Support\Facades\Validator;
 class TodoElementController extends Controller
 {
     public function store(Request $request)
@@ -19,8 +22,8 @@ class TodoElementController extends Controller
         }
 
         $validator = Validator::make($request->all(), [
-            'todo' => ['bail', 'require', 'string'],
-            'todo_list_id' => ['bail', 'require', 'exists:todo_elements,id', new CheckListOwner($request->all())],
+            'todo' => ['bail', 'required', 'string'],
+            'todo_list_id' => ['bail', 'required', 'exists:todo_lists,id', new CheckListOwner($request->all(),$user)],
         ]);
         if ($validator->fails()) {
             return response()->json([
@@ -34,7 +37,7 @@ class TodoElementController extends Controller
         $todoElement = new TodoElement();
         $todoElement->todo = $validated['todo'];
         $todoElement->todo_list_id = $validated['todo_list_id'];
-        $todoElement->done = false;
+        $todoElement->done = "false";
 
         if ($todoElement->save()) {
             return response()->json([
@@ -75,7 +78,8 @@ class TodoElementController extends Controller
         $validated = $validator->validated();
 
         $todoElement = TodoElement::find($todoElementId);
-        $todoList = TodoList::find($todoElementId->todo_list_id);
+      //  dd($todoElement);
+        $todoList = TodoList::find($todoElement->todo_list_id);
 
         if ($todoList->user_id != $user->id) {
             return response()->json([
@@ -121,7 +125,7 @@ class TodoElementController extends Controller
         if (isset($todoElement)) {
 
 
-            $todoList = TodoList::find($todoElementId->todo_list_id);
+            $todoList = TodoList::find($todoElement->todo_list_id);
 
             if ($todoList->user_id != $user->id) {
                 return response()->json([
@@ -165,7 +169,7 @@ class TodoElementController extends Controller
         }
 
         $todoElement = TodoElement::find($todoElementId);
-        $todoList = TodoList::find($todoElementId->todo_list_id);
+        $todoList = TodoList::find($todoElement->todo_list_id);
         if (isset($todoElement)) {
 
             return response()->json([

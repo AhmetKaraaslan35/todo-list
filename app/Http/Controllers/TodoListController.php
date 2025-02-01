@@ -6,6 +6,7 @@ use Illuminate\Http\Request;
 use Tymon\JWTAuth\Facades\JWTAuth;
 use Illuminate\Support\Facades\Validator;
 use App\Models\TodoList;
+use App\Models\TodoElement;
 
 class TodoListController extends Controller
 {
@@ -20,7 +21,7 @@ class TodoListController extends Controller
             ], 403);
         }
 
-        $todoLists = TodoList::find('user_id', $user - id)->get()->with('todoElements');
+        $todoLists = TodoList::where('user_id', $user->id)->with('todoElements')->get();
         if (isset($todoLists)) {
             return response()->json([
                 'payload' => compact('todoLists'),
@@ -45,9 +46,9 @@ class TodoListController extends Controller
                 'error' => true,
                 'message' => __('Insufficient Permissions'),
             ], 403);
-        }
-
-        $todoList = TodoList::find($todoListId)->with(todoElements);
+        } 
+        $todoList = TodoList::where('id',$todoListId)->with('todoElements')->first();
+ 
         if (isset($todoList)) {
             if ($todoList->user_id != $user->id) {
                 return response()->json([
@@ -127,7 +128,7 @@ class TodoListController extends Controller
         }
 
         $validator = Validator::make($request->all(), [
-            'title' => ['bail', 'require', 'string'],
+            'title' => ['bail', 'required', 'string'],
         ]);
         if ($validator->fails()) {
             return response()->json([
@@ -140,7 +141,7 @@ class TodoListController extends Controller
 
         $todoList = TodoList::find($todoListId);
 
-        if ($todoList->user_id != $uesr->id) {
+        if ($todoList->user_id != $user->id) {
             return response()->json([
                 'payload' => null,
                 'error' => true,
@@ -186,7 +187,7 @@ class TodoListController extends Controller
                     'message' => __('Insufficient Permissions'),
                 ], 403);
             }
-            $todoElements = TodoElement::where('todo_list_id', todoListId)->get();
+            $todoElements = TodoElement::where('todo_list_id', $todoListId)->get();
             foreach ($todoElements as $todoElement) {
                 $todoElement->delete();
             }
